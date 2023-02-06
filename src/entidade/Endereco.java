@@ -1,7 +1,7 @@
 package entidade;
 
 public class Endereco {
-String cep;
+
 String logradouro;
 String bairro;
 String localidade;
