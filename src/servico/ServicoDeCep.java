@@ -1,37 +1,34 @@
 package servico;
 
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import org.apache.http.HttpEntity;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.util.EntityUtils;
 
 import com.google.gson.Gson;
 
 import entidade.Endereco;
-import entidade.Util;
 
 public class ServicoDeCep {
- static String webService = "http://viacep.br/ws/";
- static int codigoSucesso = 200;
- 
- public static Endereco buscaEnderecoPelo(String cep) throws Exception {
-	 String urlParaChamada = webService + cep + "/json";
+  
+ public Endereco buscaEnderecoPelo(String cep) throws Exception {
+	 Endereco end = null;
+		HttpGet request = new HttpGet("https://viacep.com.br/ws/" + cep + "/json/");
 	 
-	 try {
-		 URL url = new URL(urlParaChamada);
-		 HttpURLConnection conexao = (HttpURLConnection) url.openConnection();
-		 
-		 if(conexao.getResponseCode() != codigoSucesso)
-			 throw new RuntimeException("HTTP error code : "+ conexao.getResponseCode());
-		 
-		 BufferedReader resposta = new BufferedReader ( new InputStreamReader(conexao.getInputStream()));
-		 String jsonEmSring = Util.converteJsonEmString(resposta);
-		 
-		 Gson gson = new Gson();
-		 Endereco endereco = gson.fromJson(jsonEmString, Endereco.class);
-		 return endereco;
-	 }catch (Exception e) {
-		 throw new Exception("ERRO: "+e);
-	 }
+	 try (CloseableHttpClient httpClient = HttpClientBuilder.create().disableRedirectHandling().build();
+				CloseableHttpResponse response = httpClient.execute(request)) {
+
+			HttpEntity entity = response.getEntity();
+			if (entity != null) {
+				String result = EntityUtils.toString(entity);
+				Gson gson = new Gson();
+				end = gson.fromJson(result, Endereco.class);
+			}
+
+		}
+
+		return end;
  }
 }
